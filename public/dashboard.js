@@ -5,6 +5,8 @@ const DASHBOARD = {
     token: null,
 
     init() {
+        this.showLoading();
+        
         this.token = localStorage.getItem('roadmapper_token');
         const userStr = localStorage.getItem('roadmapper_user');
         
@@ -22,6 +24,21 @@ const DASHBOARD = {
         this.loadRoadmaps();
     },
 
+    showLoading() {
+        const dashboard = document.querySelector('.dashboard');
+        if (dashboard) {
+            dashboard.style.opacity = '0';
+        }
+    },
+
+    hideLoading() {
+        const dashboard = document.querySelector('.dashboard');
+        if (dashboard) {
+            dashboard.style.transition = 'opacity 0.3s';
+            dashboard.style.opacity = '1';
+        }
+    },
+
     getHeaders() {
         return {
             'Content-Type': 'application/json',
@@ -36,6 +53,7 @@ const DASHBOARD = {
             localStorage.removeItem('roadmapper_user');
             window.location.href = 'index.html';
         });
+        this.hideLoading();
     },
 
     setupNavigation() {
