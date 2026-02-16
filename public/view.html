@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>view - roadmapper</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="blueprint-grid"></div>
+    
+    <div class="dashboard active">
+        <header class="dashboard-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="28" height="28" viewBox="0 0 32 32">
+                        <path d="M4 16 L16 4 L28 16 M16 4 L16 28 M8 12 L24 12 M8 20 L24 20" 
+                              stroke="white" stroke-width="1.5" fill="none"/>
+                    </svg>
+                </div>
+                <span>roadmapper</span>
+            </div>
+
+            <div style="flex: 1; text-align: center;">
+                <span id="roadmapTitleDisplay" style="font-family: 'IBM Plex Mono', monospace; font-size: 1.1rem;"></span>
+            </div>
+
+            <div class="user-menu">
+                <span id="ownerDisplay" style="font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: var(--gray-light);"></span>
+                <button class="btn-logout" id="backBtn">← back</button>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <div id="roadmapDescription" style="margin-bottom: 2rem; padding: 1.5rem; border: 1px solid var(--border-color); background: var(--gray-dark); display: none;">
+                <p style="color: var(--gray-light); font-size: 1rem;"></p>
+            </div>
+
+            <div id="collaboratorsSection" style="margin-bottom: 2rem; padding: 1.5rem; border: 1px solid var(--border-color); background: var(--gray-dark); display: none;">
+                <h3 style="font-size: 0.85rem; font-family: 'IBM Plex Mono', monospace; margin-bottom: 1rem; color: var(--gray-light);">collaborators</h3>
+                <div id="collaboratorsList" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+            </div>
+
+            <div class="canvas-container">
+                <div id="roadmapCanvas" class="roadmap-canvas"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="view.js"></script>
+</body>
+</html>
