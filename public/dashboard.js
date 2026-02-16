@@ -1,13 +1,19 @@
+const API_URL = window.location.origin;
+
 const DASHBOARD = {
     currentUser: null,
+    token: null,
 
     init() {
-        this.currentUser = localStorage.getItem('roadmapper_current_user');
+        this.token = localStorage.getItem('roadmapper_token');
+        const userStr = localStorage.getItem('roadmapper_user');
         
-        if (!this.currentUser) {
+        if (!this.token || !userStr) {
             window.location.href = 'index.html';
             return;
         }
+
+        this.currentUser = JSON.parse(userStr);
 
         this.setupUI();
         this.setupNavigation();
@@ -16,10 +22,18 @@ const DASHBOARD = {
         this.loadRoadmaps();
     },
 
+    getHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.token}`
+        };
+    },
+
     setupUI() {
-        document.getElementById('usernameDisplay').textContent = this.currentUser;
+        document.getElementById('usernameDisplay').textContent = this.currentUser.username;
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('roadmapper_current_user');
+            localStorage.removeItem('roadmapper_token');
+            localStorage.removeItem('roadmapper_user');
             window.location.href = 'index.html';
         });
     },
@@ -94,102 +108,124 @@ const DASHBOARD = {
         document.getElementById(modalId).classList.remove('active');
     },
 
-    createRoadmap() {
+    async createRoadmap() {
         const title = document.getElementById('roadmapTitle').value;
         const description = document.getElementById('roadmapDescription').value;
         const isPublic = document.getElementById('roadmapPublic').checked;
 
-        const roadmaps = JSON.parse(localStorage.getItem('roadmapper_roadmaps') || '[]');
-        
-        const newRoadmap = {
-            id: 'rm_' + Date.now(),
-            title,
-            description,
-            owner: this.currentUser,
-            collaborators: [],
-            isPublic,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            milestones: []
-        };
-
-        roadmaps.push(newRoadmap);
-        localStorage.setItem('roadmapper_roadmaps', JSON.stringify(roadmaps));
-
-        this.closeModal('createRoadmapModal');
-        document.getElementById('createRoadmapForm').reset();
-        this.loadRoadmaps();
-    },
-
-    loadRoadmaps() {
-        const roadmaps = JSON.parse(localStorage.getItem('roadmapper_roadmaps') || '[]');
-        const myRoadmaps = roadmaps.filter(rm => 
-            rm.owner === this.currentUser || rm.collaborators.includes(this.currentUser)
-        );
-
-        const container = document.getElementById('myRoadmapsList');
-        
-        if (myRoadmaps.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">◇</div>
-                    <h3>no roadmaps yet</h3>
-                    <p>create your first roadmap to get started</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = myRoadmaps.map(rm => this.renderRoadmapCard(rm)).join('');
-
-        document.querySelectorAll('.roadmap-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const roadmapId = card.dataset.id;
-                this.openEditModal(roadmapId);
+        try {
+            const response = await fetch(`${API_URL}/api/roadmaps`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ title, description, isPublic })
             });
-        });
+
+            if (!response.ok) {
+                alert('failed to create roadmap');
+                return;
+            }
+
+            this.closeModal('createRoadmapModal');
+            document.getElementById('createRoadmapForm').reset();
+            this.loadRoadmaps();
+        } catch (error) {
+            alert('connection error');
+        }
     },
 
-    loadBrowseRoadmaps() {
-        const roadmaps = JSON.parse(localStorage.getItem('roadmapper_roadmaps') || '[]');
-        const publicRoadmaps = roadmaps.filter(rm => rm.isPublic);
+    async loadRoadmaps() {
+        try {
+            const response = await fetch(`${API_URL}/api/roadmaps`, {
+                headers: this.getHeaders()
+            });
 
-        const container = document.getElementById('browseRoadmapsList');
-        
-        if (publicRoadmaps.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">◇</div>
-                    <h3>no public roadmaps</h3>
-                    <p>be the first to share a roadmap</p>
-                </div>
-            `;
-            return;
+            if (!response.ok) {
+                throw new Error('failed to load roadmaps');
+            }
+
+            const roadmaps = await response.json();
+            const container = document.getElementById('myRoadmapsList');
+            
+            if (roadmaps.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">◇</div>
+                        <h3>no roadmaps yet</h3>
+                        <p>create your first roadmap to get started</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = roadmaps.map(rm => this.renderRoadmapCard(rm)).join('');
+
+            document.querySelectorAll('.roadmap-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const roadmapId = card.dataset.id;
+                    this.openEditModal(roadmapId);
+                });
+            });
+        } catch (error) {
+            console.error(error);
+            alert('failed to load roadmaps');
         }
+    },
 
-        container.innerHTML = publicRoadmaps.map(rm => this.renderRoadmapCard(rm, true)).join('');
+    async loadBrowseRoadmaps() {
+        try {
+            const response = await fetch(`${API_URL}/api/roadmaps/public`);
+
+            if (!response.ok) {
+                throw new Error('failed to load public roadmaps');
+            }
+
+            const roadmaps = await response.json();
+            const container = document.getElementById('browseRoadmapsList');
+            
+            if (roadmaps.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">◇</div>
+                        <h3>no public roadmaps</h3>
+                        <p>be the first to share a roadmap</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = roadmaps.map(rm => this.renderRoadmapCard(rm, true)).join('');
+
+            document.querySelectorAll('.roadmap-card[data-browse="true"]').forEach(card => {
+                card.addEventListener('click', () => {
+                    const roadmapId = card.dataset.id;
+                    window.location.href = `view.html?id=${roadmapId}`;
+                });
+            });
+        } catch (error) {
+            console.error(error);
+        }
     },
 
     renderRoadmapCard(roadmap, isBrowse = false) {
-        const date = new Date(roadmap.updatedAt).toLocaleDateString();
-        const isOwner = roadmap.owner === this.currentUser;
+        const date = new Date(roadmap.updated_at).toLocaleDateString();
+        const collaborators = Array.isArray(roadmap.collaborators) ? roadmap.collaborators : [];
         
         return `
-            <div class="roadmap-card" data-id="${roadmap.id}">
+            <div class="roadmap-card" data-id="${roadmap.id}" ${isBrowse ? 'data-browse="true"' : ''}>
                 <div class="roadmap-card-header">
                     <div>
                         <h3>${roadmap.title}</h3>
                         <div class="roadmap-meta">
-                            ${isBrowse ? `by ${roadmap.owner} • ` : ''}updated ${date}
+                            ${isBrowse ? `by ${roadmap.owner_name} • ` : ''}updated ${date}
                         </div>
                     </div>
                 </div>
                 <p class="roadmap-description">${roadmap.description || 'no description'}</p>
-                ${roadmap.collaborators.length > 0 ? `
+                ${collaborators.length > 0 ? `
                     <div class="roadmap-collaborators">
-                        ${roadmap.collaborators.map(c => `
-                            <div class="collaborator-avatar" title="${c}">
-                                ${c.charAt(0).toUpperCase()}
+                        ${collaborators.map(c => `
+                            <div class="collaborator-avatar" title="${c.username}">
+                                ${c.username.charAt(0).toUpperCase()}
                             </div>
                         `).join('')}
                     </div>
@@ -198,80 +234,97 @@ const DASHBOARD = {
         `;
     },
 
-    openEditModal(roadmapId) {
-        const roadmaps = JSON.parse(localStorage.getItem('roadmapper_roadmaps') || '[]');
-        const roadmap = roadmaps.find(rm => rm.id === roadmapId);
+    async openEditModal(roadmapId) {
+        try {
+            const response = await fetch(`${API_URL}/api/roadmaps/${roadmapId}`, {
+                headers: this.getHeaders()
+            });
 
-        if (!roadmap) return;
+            if (!response.ok) {
+                alert('failed to load roadmap');
+                return;
+            }
 
-        const isOwner = roadmap.owner === this.currentUser;
-        const canEdit = isOwner || roadmap.collaborators.includes(this.currentUser);
+            const roadmap = await response.json();
+            const isOwner = roadmap.owner_id === this.currentUser.id;
+            const collaborators = Array.isArray(roadmap.collaborators) ? roadmap.collaborators : [];
+            const collaboratorNames = collaborators.map(c => c.username).join(', ');
 
-        if (!canEdit) {
-            window.location.href = `editor.html?id=${roadmapId}`;
-            return;
+            document.getElementById('editRoadmapId').value = roadmap.id;
+            document.getElementById('editRoadmapTitle').value = roadmap.title;
+            document.getElementById('editRoadmapDescription').value = roadmap.description || '';
+            document.getElementById('editRoadmapCollaborators').value = collaboratorNames;
+            document.getElementById('editRoadmapPublic').checked = roadmap.is_public;
+
+            if (!isOwner) {
+                document.getElementById('deleteRoadmapBtn').style.display = 'none';
+                document.getElementById('editRoadmapTitle').disabled = true;
+                document.getElementById('editRoadmapPublic').disabled = true;
+            } else {
+                document.getElementById('deleteRoadmapBtn').style.display = 'block';
+                document.getElementById('editRoadmapTitle').disabled = false;
+                document.getElementById('editRoadmapPublic').disabled = false;
+            }
+
+            this.openModal('editRoadmapModal');
+        } catch (error) {
+            console.error(error);
+            alert('connection error');
         }
-
-        document.getElementById('editRoadmapId').value = roadmap.id;
-        document.getElementById('editRoadmapTitle').value = roadmap.title;
-        document.getElementById('editRoadmapDescription').value = roadmap.description || '';
-        document.getElementById('editRoadmapCollaborators').value = roadmap.collaborators.join(', ');
-        document.getElementById('editRoadmapPublic').checked = roadmap.isPublic;
-
-        if (!isOwner) {
-            document.getElementById('deleteRoadmapBtn').style.display = 'none';
-            document.getElementById('editRoadmapTitle').disabled = true;
-            document.getElementById('editRoadmapPublic').disabled = true;
-        } else {
-            document.getElementById('deleteRoadmapBtn').style.display = 'block';
-            document.getElementById('editRoadmapTitle').disabled = false;
-            document.getElementById('editRoadmapPublic').disabled = false;
-        }
-
-        this.openModal('editRoadmapModal');
     },
 
-    updateRoadmap() {
+    async updateRoadmap() {
         const roadmapId = document.getElementById('editRoadmapId').value;
         const title = document.getElementById('editRoadmapTitle').value;
         const description = document.getElementById('editRoadmapDescription').value;
         const collaboratorsStr = document.getElementById('editRoadmapCollaborators').value;
         const isPublic = document.getElementById('editRoadmapPublic').checked;
 
-        const roadmaps = JSON.parse(localStorage.getItem('roadmapper_roadmaps') || '[]');
-        const roadmapIndex = roadmaps.findIndex(rm => rm.id === roadmapId);
-
-        if (roadmapIndex === -1) return;
-
         const collaborators = collaboratorsStr
             .split(',')
             .map(c => c.trim())
             .filter(c => c.length > 0);
 
-        roadmaps[roadmapIndex] = {
-            ...roadmaps[roadmapIndex],
-            title,
-            description,
-            collaborators,
-            isPublic,
-            updatedAt: new Date().toISOString()
-        };
+        try {
+            const response = await fetch(`${API_URL}/api/roadmaps/${roadmapId}`, {
+                method: 'PUT',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ title, description, isPublic, collaborators })
+            });
 
-        localStorage.setItem('roadmapper_roadmaps', JSON.stringify(roadmaps));
-        this.closeModal('editRoadmapModal');
-        this.loadRoadmaps();
+            if (!response.ok) {
+                alert('failed to update roadmap');
+                return;
+            }
+
+            this.closeModal('editRoadmapModal');
+            this.loadRoadmaps();
+        } catch (error) {
+            alert('connection error');
+        }
     },
 
-    deleteRoadmap() {
+    async deleteRoadmap() {
         if (!confirm('are you sure you want to delete this roadmap?')) return;
 
         const roadmapId = document.getElementById('editRoadmapId').value;
-        const roadmaps = JSON.parse(localStorage.getItem('roadmapper_roadmaps') || '[]');
-        const filtered = roadmaps.filter(rm => rm.id !== roadmapId);
 
-        localStorage.setItem('roadmapper_roadmaps', JSON.stringify(filtered));
-        this.closeModal('editRoadmapModal');
-        this.loadRoadmaps();
+        try {
+            const response = await fetch(`${API_URL}/api/roadmaps/${roadmapId}`, {
+                method: 'DELETE',
+                headers: this.getHeaders()
+            });
+
+            if (!response.ok) {
+                alert('failed to delete roadmap');
+                return;
+            }
+
+            this.closeModal('editRoadmapModal');
+            this.loadRoadmaps();
+        } catch (error) {
+            alert('connection error');
+        }
     }
 };
 
