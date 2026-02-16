@@ -159,11 +159,25 @@ app.get('/api/roadmaps/public', async (req, res) => {
             DISTINCT jsonb_build_object('username', cu.username)
           ) FILTER (WHERE cu.username IS NOT NULL),
           '[]'
-        ) as collaborators
+        ) as collaborators,
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', m.id,
+              'title', m.title,
+              'description', m.description,
+              'date', m.date,
+              'x', m.x,
+              'y', m.y
+            )
+          ) FILTER (WHERE m.id IS NOT NULL),
+          '[]'
+        ) as milestones
       FROM roadmaps r
       JOIN users u ON r.owner_id = u.id
       LEFT JOIN roadmap_collaborators rc ON r.id = rc.roadmap_id
       LEFT JOIN users cu ON rc.user_id = cu.id
+      LEFT JOIN milestones m ON r.id = m.roadmap_id
       WHERE r.is_public = true
       GROUP BY r.id, u.username
       ORDER BY r.updated_at DESC`
