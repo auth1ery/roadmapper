@@ -5,6 +5,8 @@ const VIEW = {
     roadmap: null,
 
     init() {
+        this.showLoading();
+        
         const urlParams = new URLSearchParams(window.location.search);
         this.roadmapId = urlParams.get('id');
 
@@ -15,6 +17,21 @@ const VIEW = {
 
         this.loadRoadmap();
         this.setupUI();
+    },
+
+    showLoading() {
+        const dashboard = document.querySelector('.dashboard');
+        if (dashboard) {
+            dashboard.style.opacity = '0';
+        }
+    },
+
+    hideLoading() {
+        const dashboard = document.querySelector('.dashboard');
+        if (dashboard) {
+            dashboard.style.transition = 'opacity 0.3s';
+            dashboard.style.opacity = '1';
+        }
     },
 
     setupUI() {
@@ -73,6 +90,8 @@ const VIEW = {
                 </div>
             `).join('');
         }
+        
+        this.hideLoading();
     },
 
     renderMilestones() {
