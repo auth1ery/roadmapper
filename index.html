@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>roadmapper</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body class="landing">
+    <div class="blueprint-grid"></div>
+    
+    <header class="landing-header">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg width="28" height="28" viewBox="0 0 32 32">
+                    <path d="M4 16 L16 4 L28 16 M16 4 L16 28 M8 12 L24 12 M8 20 L24 20" 
+                          stroke="white" stroke-width="1.5" fill="none"/>
+                </svg>
+            </div>
+            <span>roadmapper</span>
+        </div>
+    </header>
+
+    <main class="landing-main">
+        <div class="hero-section">
+            <h1 class="hero-title">
+                <span class="line">plan.</span>
+                <span class="line">build.</span>
+                <span class="line">execute.</span>
+                <span class="line">or whatever i guess.</span>
+            </h1>
+            <p class="hero-subtitle">a minimal project roadmap system for teams who value clarity over complexity!</p>
+        </div>
+
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">login</button>
+                <button class="auth-tab" data-tab="signup">sign up</button>
+            </div>
+
+            <form id="loginForm" class="auth-form active">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="loginUsername">username</label>
+                        <input type="text" id="loginUsername" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">password</label>
+                        <input type="password" id="loginPassword" required autocomplete="current-password">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">access system</button>
+                <div class="form-message" id="loginMessage"></div>
+            </form>
+
+            <form id="signupForm" class="auth-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="signupUsername">username</label>
+                        <input type="text" id="signupUsername" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">password</label>
+                        <input type="password" id="signupPassword" required autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPasswordConfirm">confirm password</label>
+                        <input type="password" id="signupPasswordConfirm" required autocomplete="new-password">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">create account</button>
+                <div class="form-message" id="signupMessage"></div>
+            </form>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature">
+                <div class="feature-number">01</div>
+                <h3>create roadmaps</h3>
+                <p>visualize timeline planning with milestones and tasks</p>
+            </div>
+            <div class="feature">
+                <div class="feature-number">02</div>
+                <h3>collaborate</h3>
+                <p>assign team members and manage permissions</p>
+            </div>
+            <div class="feature">
+                <div class="feature-number">03</div>
+                <h3>browse & share</h3>
+                <p>discover and explore public roadmaps</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="landing-footer">
+        <p>clarity > complexity</p>
+    </footer>
+
+    <script src="auth.js"></script>
+</body>
+</html>
