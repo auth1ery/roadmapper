@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dashboard - roadmapper</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="blueprint-grid"></div>
+    
+    <div class="dashboard active">
+        <header class="dashboard-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="28" height="28" viewBox="0 0 32 32">
+                        <path d="M4 16 L16 4 L28 16 M16 4 L16 28 M8 12 L24 12 M8 20 L24 20" 
+                              stroke="white" stroke-width="1.5" fill="none"/>
+                    </svg>
+                </div>
+                <span>roadmapper</span>
+            </div>
+
+            <nav class="dashboard-nav">
+                <a class="nav-link active" data-section="my-roadmaps">my roadmaps</a>
+                <a class="nav-link" data-section="browse">browse</a>
+            </nav>
+
+            <div class="user-menu">
+                <span class="username-display" id="usernameDisplay"></span>
+                <button class="btn-logout" id="logoutBtn">logout</button>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <section id="my-roadmaps" class="content-section active">
+                <div class="section-header">
+                    <h2 class="section-title">my roadmaps</h2>
+                    <button class="btn-secondary" id="createRoadmapBtn">+ new roadmap</button>
+                </div>
+                <div id="myRoadmapsList" class="roadmaps-grid"></div>
+            </section>
+
+            <section id="browse" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">browse roadmaps</h2>
+                </div>
+                <div id="browseRoadmapsList" class="roadmaps-grid"></div>
+            </section>
+        </div>
+    </div>
+
+    <div class="modal" id="createRoadmapModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">create new roadmap</h3>
+                <button class="modal-close" data-modal="createRoadmapModal">×</button>
+            </div>
+            <form class="modal-form" id="createRoadmapForm">
+                <div class="form-group">
+                    <label for="roadmapTitle">title</label>
+                    <input type="text" id="roadmapTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="roadmapDescription">description</label>
+                    <textarea id="roadmapDescription" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="roadmapPublic">
+                        make public (visible in browse)
+                    </label>
+                </div>
+                <button type="submit" class="btn-primary">create roadmap</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="editRoadmapModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">edit roadmap</h3>
+                <button class="modal-close" data-modal="editRoadmapModal">×</button>
+            </div>
+            <form class="modal-form" id="editRoadmapForm">
+                <input type="hidden" id="editRoadmapId">
+                <div class="form-group">
+                    <label for="editRoadmapTitle">title</label>
+                    <input type="text" id="editRoadmapTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRoadmapDescription">description</label>
+                    <textarea id="editRoadmapDescription" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editRoadmapCollaborators">collaborators (comma-separated usernames)</label>
+                    <input type="text" id="editRoadmapCollaborators" placeholder="user1, user2, user3">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editRoadmapPublic">
+                        make public (visible in browse)
+                    </label>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary" style="flex: 1;">save changes</button>
+                    <button type="button" class="btn-secondary" id="deleteRoadmapBtn">delete</button>
+                    <button type="button" class="btn-secondary" id="openEditorBtn">open editor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>
