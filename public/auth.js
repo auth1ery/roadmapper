@@ -1,8 +1,16 @@
+const API_URL = window.location.origin;
+
 const AUTH = {
     init() {
-        this.setupTabSwitching();
-        this.setupForms();
-        this.checkAuth();
+        if (this.isAuthPage()) {
+            this.setupTabSwitching();
+            this.setupForms();
+            this.checkAuthRedirect();
+        }
+    },
+
+    isAuthPage() {
+        return window.location.pathname.includes('index.html') || window.location.pathname === '/';
     },
 
     setupTabSwitching() {
@@ -38,23 +46,40 @@ const AUTH = {
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
         const message = document.getElementById('loginMessage');
+        const submitBtn = document.querySelector('#loginForm button[type="submit"]');
 
-        const users = JSON.parse(localStorage.getItem('roadmapper_users') || '{}');
+        submitBtn.textContent = 'logging in...';
+        submitBtn.disabled = true;
 
-        if (!users[username]) {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                message.className = 'form-message error';
+                message.textContent = data.error;
+                submitBtn.textContent = 'access system';
+                submitBtn.disabled = false;
+                return;
+            }
+
+            localStorage.setItem('roadmapper_token', data.token);
+            localStorage.setItem('roadmapper_user', JSON.stringify(data.user));
+            
+            window.location.href = 'dashboard.html';
+        } catch (error) {
             message.className = 'form-message error';
-            message.textContent = 'user not found';
-            return;
+            message.textContent = 'connection error';
+            submitBtn.textContent = 'access system';
+            submitBtn.disabled = false;
         }
-
-        if (users[username].password !== password) {
-            message.className = 'form-message error';
-            message.textContent = 'incorrect password';
-            return;
-        }
-
-        localStorage.setItem('roadmapper_current_user', username);
-        window.location.href = 'dashboard.html';
     },
 
     async handleSignup() {
@@ -62,6 +87,7 @@ const AUTH = {
         const password = document.getElementById('signupPassword').value;
         const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
         const message = document.getElementById('signupMessage');
+        const submitBtn = document.querySelector('#signupForm button[type="submit"]');
 
         if (password !== passwordConfirm) {
             message.className = 'form-message error';
@@ -69,50 +95,50 @@ const AUTH = {
             return;
         }
 
-        if (username.length < 3) {
+        submitBtn.textContent = 'creating account...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(`${API_URL}/api/auth/signup`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                message.className = 'form-message error';
+                message.textContent = data.error;
+                submitBtn.textContent = 'create account';
+                submitBtn.disabled = false;
+                return;
+            }
+
+            localStorage.setItem('roadmapper_token', data.token);
+            localStorage.setItem('roadmapper_user', JSON.stringify(data.user));
+
+            message.className = 'form-message success';
+            message.textContent = 'account created successfully';
+
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 500);
+        } catch (error) {
             message.className = 'form-message error';
-            message.textContent = 'username must be at least 3 characters';
-            return;
+            message.textContent = 'connection error';
+            submitBtn.textContent = 'create account';
+            submitBtn.disabled = false;
         }
-
-        if (password.length < 6) {
-            message.className = 'form-message error';
-            message.textContent = 'password must be at least 6 characters';
-            return;
-        }
-
-        const users = JSON.parse(localStorage.getItem('roadmapper_users') || '{}');
-
-        if (users[username]) {
-            message.className = 'form-message error';
-            message.textContent = 'username already exists';
-            return;
-        }
-
-        users[username] = {
-            password: password,
-            createdAt: new Date().toISOString()
-        };
-
-        localStorage.setItem('roadmapper_users', JSON.stringify(users));
-        localStorage.setItem('roadmapper_current_user', username);
-
-        message.className = 'form-message success';
-        message.textContent = 'account created successfully';
-
-        setTimeout(() => {
-            window.location.href = 'dashboard.html';
-        }, 1000);
     },
 
-    checkAuth() {
-        const currentUser = localStorage.getItem('roadmapper_current_user');
-        if (currentUser && window.location.pathname.includes('dashboard')) {
-            return true;
-        } else if (currentUser && window.location.pathname.includes('index')) {
+    checkAuthRedirect() {
+        const token = localStorage.getItem('roadmapper_token');
+        if (token && this.isAuthPage()) {
             window.location.href = 'dashboard.html';
         }
-        return false;
     }
 };
 
